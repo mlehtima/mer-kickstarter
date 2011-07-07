@@ -127,7 +127,7 @@ class KSWriter():
         if meta.has_key('FileName') and meta['FileName']:
             f = None
             if meta.has_key("Baseline"):
-                mkdir_p(meta['Baseline'])
+                mkdir_p("%s/%s" % (self.outdir,meta['Baseline']))
                 f = open("%s/%s/%s.ks" %( self.outdir, meta['Baseline'],  meta['FileName'] ), 'w')
             else:
                 f = open("%s/%s.ks" %( self.outdir, meta['FileName'] ), 'w')
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     parser.add_option("-c", "--configs", type="string", dest="configsfile",
                     help="configuration meta file")
     parser.add_option("-o", "--outdir", type="string", dest="outdir",
-                    help="outdir")
+                    help="outdir", default=".")
     parser.add_option("-r", "--repos", type="string", dest="repofile",
                     help="repo meta file")
     parser.add_option("-i", "--index", type="string", dest="indexfile",
