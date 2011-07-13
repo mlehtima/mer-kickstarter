@@ -122,6 +122,17 @@ class KSWriter():
         else:
             new_repos = repos
 
+        # Check that all repos are actually found from repos data set
+        if meta.has_key("Repos"):
+            for selected_repo in meta['Repos']:
+                found = False
+                for repo in repos:
+                    if repo['Name'] == selected_repo:
+                        found = True
+                        break
+                if not found:
+                    print "WARNING: Repository with name '%s' is not found, ignoring the repo for file '%s.ks'." % (selected_repo, meta['FileName'])
+
         nameSpace = {'metadata': meta,  'repos': new_repos}
         t = kickstart(searchList=[nameSpace])
         a = str(t)
