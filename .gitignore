@@ -2,3 +2,5 @@ build/
 kickstart/__init__.py
 kickstart/kickstart.py
 *~
+dist/
+kickstarter.egg-info/
