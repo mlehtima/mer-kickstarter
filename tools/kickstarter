@@ -243,7 +243,7 @@ if __name__ == '__main__':
                     ks.process_files(conf, r)
                 else:
                     print "%s is inactive, not generate %s this time" %(conf['Name'], conf['FileName'] )
-            else:
+            elif not f.endswith('~'):
                 print "WARNING: File '%s/%s' ignored." % (path,f)
 
     if options.indexfile:
