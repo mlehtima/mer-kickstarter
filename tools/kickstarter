@@ -140,9 +140,11 @@ class KSWriter():
             f = None
             if meta.has_key("Baseline"):
                 mkdir_p("%s/%s" % (self.outdir,meta['Baseline']))
-                f = open("%s/%s/%s.ks" %( self.outdir, meta['Baseline'],  meta['FileName'] ), 'w')
+                ksFile = "%s/%s/%s.ks" % ( self.outdir, meta['Baseline'],  meta['FileName'] )
             else:
-                f = open("%s/%s.ks" %( self.outdir, meta['FileName'] ), 'w')
+                ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
+            f = open(ksFile, 'w')
+            print "Creating %s (%s)" %(conf['Name'], ksFile )
             f.write(a)
             f.close()
 
@@ -224,7 +226,6 @@ if __name__ == '__main__':
         for img in image_meta['Configurations']:
             conf = ks.parse(img)
             if conf.has_key('Active') and conf['Active']:
-                print "Creating %s (%s.ks)" %(img['Name'], img['FileName'] )
                 ks.process_files(conf, r)
             else:
                 print "%s is inactive, not generate %s this time" %(img['Name'], img['FileName'] )
@@ -235,7 +236,6 @@ if __name__ == '__main__':
                 local = yaml.load(fp)
                 conf = ks.parse(local)
                 if conf.has_key('Active') and conf['Active']:
-                    print "Creating %s (%s.ks)" %(conf['Name'], conf['FileName'] )
                     ks.process_files(conf, r)
                 else:
                     print "%s is inactive, not generate %s this time" %(conf['Name'], conf['FileName'] )
