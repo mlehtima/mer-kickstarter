@@ -109,6 +109,11 @@ class KSWriter():
         new_repos = []
         #print repos
         #print meta
+
+        if not meta.has_key('FileName') or not meta['FileName']:
+            print "WARNING: Filename field missing. Ignoring config called '%s'." % meta['Name']
+            return
+
         if meta.has_key("Architecture") and  meta['Architecture']:
             for repo in repos:
                 r = {}
@@ -136,18 +141,17 @@ class KSWriter():
         nameSpace = {'metadata': meta,  'repos': new_repos}
         t = kickstart(searchList=[nameSpace])
         a = str(t)
-        if meta.has_key('FileName') and meta['FileName']:
-            f = None
-            if meta.has_key("Baseline"):
-                mkdir_p("%s/%s" % (self.outdir,meta['Baseline']))
-                ksFile = "%s/%s/%s.ks" % ( self.outdir, meta['Baseline'],  meta['FileName'] )
-            else:
-                ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
-            f = open(ksFile, 'w')
-            print "Creating %s (%s)" %(conf['Name'], ksFile )
-            f.write(a)
-            f.close()
-
+        
+        f = None
+        if meta.has_key("Baseline"):
+            mkdir_p("%s/%s" % (self.outdir,meta['Baseline']))
+            ksFile = "%s/%s/%s.ks" % ( self.outdir, meta['Baseline'],  meta['FileName'] )
+        else:
+            ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
+        f = open(ksFile, 'w')
+        print "Creating %s (%s)" %(conf['Name'], ksFile )
+        f.write(a)
+        f.close()
 
 def image_xml(root, img):
     s = etree.Element("config")
@@ -240,7 +244,7 @@ if __name__ == '__main__':
                 else:
                     print "%s is inactive, not generate %s this time" %(conf['Name'], conf['FileName'] )
             else:
-                print "WARNING: File '%s' ignored." % (f)
+                print "WARNING: File '%s/%s' ignored." % (path,f)
 
     if options.indexfile:
         str = create_xml(image_meta)
