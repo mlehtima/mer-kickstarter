@@ -114,13 +114,19 @@ class KSWriter():
             print "WARNING: Filename field missing. Ignoring config called '%s'." % meta['Name']
             return
 
-        if meta.has_key("Architecture") and  meta['Architecture']:
+        if meta.has_key("Architecture") and meta['Architecture']:
             for repo in repos:
                 r = {}
                 r['Name'] = repo['Name']
                 if repo.has_key('Options'):
                     r['Options'] = repo['Options']
-                r['Url'] = repo['Url'].replace("@ARCH@", meta['Architecture'])
+                
+                # Prefer RepositoryArchitecture if present, otherwise use Architecture
+                repo_arch = meta['Architecture']
+                if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
+                    repo_arch = meta['RepositoryArchitecture']                                            
+                r['Url'] = repo['Url'].replace("@ARCH@", repo_arch)
+                
                 if meta.has_key("Baseline"):
                     r['Url'] = r['Url'].replace("@RELEASE@", meta['Baseline'])
                 new_repos.append(r)
