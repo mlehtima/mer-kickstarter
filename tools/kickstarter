@@ -59,17 +59,20 @@ class KSWriter():
         conf.update(img)
         lval = ['Repos', 'Groups', 'PostScripts', 'NoChrootScripts', 'RemovePackages', 'ExtraPackages']
         lvald = {}
-        for x in img["Inherit"]:
-            plat = image_meta[x]
-            conf.update(plat)
+        plat = {}
+        if img.has_key('Inherit'):
+            for x in img["Inherit"]:
+                plat = image_meta[x]
+                conf.update(plat)
         for l in lval:
             full = []
             if image_meta['Default'].has_key(l) and image_meta['Default'][l]:
                  full = full + image_meta['Default'][l]
-            for x in img['Inherit']:
-                plat = image_meta[x]
-                if plat.has_key(l) and plat[l]:
-                    full = full + plat[l]
+            if img.has_key('Inherit'):
+                for x in img['Inherit']:
+                    plat = image_meta[x]
+                    if plat.has_key(l) and plat[l]:
+                        full = full + plat[l]
             if img.has_key(l) and img[l]:
                 full = full + img[l]
             lvald[l] = sorted(set(full), key=full.index)
