@@ -67,6 +67,10 @@ class KSWriter():
                     continue
                 conf.update(image_meta[x])
 
+        # Legacy support for "Platform" section
+        if img.has_key('Platform'):
+            conf.update(image_meta[img['Platform']])
+
         # Merging lists from default and Inherited.
         lvald = {}
         lval = ['Repos', 'Groups', 'PostScripts', 'NoChrootScripts', 'RemovePackages', 'ExtraPackages']
@@ -81,6 +85,10 @@ class KSWriter():
                     plat = image_meta[x]
                     if plat.has_key(l) and plat[l]:
                         full = full + plat[l]
+            if img.has_key('Platform'):
+                plat = image_meta[img['Platform']]
+                if plat.has_key(l) and plat[l]:
+                    full = full + plat[l]
             if img.has_key(l) and img[l]:
                 full = full + img[l]
             lvald[l] = sorted(set(full), key=full.index)
