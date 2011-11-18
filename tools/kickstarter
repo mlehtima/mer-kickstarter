@@ -55,30 +55,37 @@ class KSWriter():
         print yaml.dump(yaml.load(self.stream))
 
     def parse(self, img):
+        # Taking default values as a base.
         conf = copy.copy(image_meta['Default'])
         conf.update(img)
-        lval = ['Repos', 'Groups', 'PostScripts', 'NoChrootScripts', 'RemovePackages', 'ExtraPackages']
-        lvald = {}
-        plat = {}
+
+        # Updating conf with values from Inherited sections.
         if img.has_key('Inherit'):
             for x in img["Inherit"]:
-                plat = image_meta[x]
-                conf.update(plat)
+                if not image_meta.has_key(x):
+                    print "WARNING: Unable to find inherit section '%s' ignoring." % x
+                    continue
+                conf.update(image_meta[x])
+
+        # Merging lists from default and Inherited.
+        lvald = {}
+        lval = ['Repos', 'Groups', 'PostScripts', 'NoChrootScripts', 'RemovePackages', 'ExtraPackages']
         for l in lval:
             full = []
             if image_meta['Default'].has_key(l) and image_meta['Default'][l]:
                  full = full + image_meta['Default'][l]
             if img.has_key('Inherit'):
                 for x in img['Inherit']:
+                    if not image_meta.has_key(x):
+                        continue
                     plat = image_meta[x]
                     if plat.has_key(l) and plat[l]:
                         full = full + plat[l]
             if img.has_key(l) and img[l]:
                 full = full + img[l]
             lvald[l] = sorted(set(full), key=full.index)
-            #print full
             conf.update(lvald)
-        #print conf
+
         postscript = ""
         for scr in conf['PostScripts']:
             if os.path.exists('./custom/scripts/%s.post' %scr):
@@ -87,7 +94,7 @@ class KSWriter():
                 postscript += "\n"
                 f.close()
             else:
-                print './custom/scripts/%s.post not found, skipping.' %scr
+                print 'WARNING: ./custom/scripts/%s.post not found, skipping.' %scr
 
         nochrootscript = ""
         for scr in conf['NoChrootScripts']:
@@ -97,24 +104,24 @@ class KSWriter():
                 nochrootscript += "\n"
                 f.close()
             else:
-                print './custom/scripts/%s.nochroot not found, skipping.' %scr
+                print 'WARNING: ./custom/scripts/%s.nochroot not found, skipping.' %scr
 
-        ptab = ""
-        for g in [ plat, img ]:
-            if g.has_key("Part"):
-                f = open("./custom/part/%s" %g['Part'] )
-                ptab = f.read()
+        if conf.has_key("Part"):
+            partfn = "./custom/part/%s" % conf['Part']
+            if os.path.exists( partfn ):
+                f = open( partfn )
+                conf['Part'] = f.read()
                 f.close()
+            else:
+                print "WARNING: %s not found" % partfn
+                del conf['Part']
 
-        conf['Part'] = ptab
         conf['Post'] = postscript
         conf['NoChroot'] = nochrootscript
         return conf
 
     def process_files(self,  meta,  repos):
         new_repos = []
-        #print repos
-        #print meta
 
         if not meta.has_key('FileName') or not meta['FileName']:
             print "WARNING: Filename field missing. Ignoring config called '%s'." % meta['Name']

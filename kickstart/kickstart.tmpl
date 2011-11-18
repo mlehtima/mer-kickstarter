@@ -13,10 +13,10 @@
 lang ${metadata.Language}
 keyboard ${metadata.Keyboard}
 timezone --utc ${metadata.Timezone}
-#if $metadata.Part == ""
-part / --size ${metadata.PartSize} --ondisk sda --fstype=${metadata.FileSystem}
-#else
+#if $metadata.has_key("Part")
 ${metadata.Part}
+#else
+part / --size ${metadata.PartSize} --ondisk sda --fstype=${metadata.FileSystem}
 #end if
 rootpw ${metadata.RootPass} 
 #if $metadata.has_key("StartX")
