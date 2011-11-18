@@ -4,3 +4,4 @@ kickstart/kickstart.py
 *~
 dist/
 kickstarter.egg-info/
+*.bak
