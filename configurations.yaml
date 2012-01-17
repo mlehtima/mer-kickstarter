@@ -5,7 +5,7 @@ Default:
     Language: en_US.UTF-8
     Keyboard: us
     PackageArgs:
-    SaveRepos:  True
+    RepositoryOptions: --save --debuginfo --source
     Timezone: America/Los_Angeles
     RootPass: meego
     DefaultUser: meego
