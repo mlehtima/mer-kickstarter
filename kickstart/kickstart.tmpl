@@ -59,11 +59,7 @@ user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.
 #if $rr.has_key("Options")
 #set $options_repo = $rr.Options
 #end if
-#if $rr.Name == "adobe"
-repo --name=${r} --baseurl=${rr.Url} --save
-#else
 repo --name=${r} --baseurl=${rr.Url} ${options_repo}
-#end if
 #end if
 #end for
 #end for
