@@ -195,23 +195,6 @@ def image_xml(root, img):
     s.append(cc)
     root.append(s)
 
-def create_xml(image_meta):
-    root = etree.Element("image-configs")
-    if image_meta.has_key('Configurations'):
-        for img in image_meta['Configurations']:
-            image_xml(root,img)
-    for path in image_meta['ExternalConfigs']:
-        for f in os.listdir(path):
-            if f.endswith('.yaml'):
-                fp = file('%s/%s' %(path, f), 'r')
-                local = yaml.load(fp)
-                conf = ks.parse(local)
-                if conf.has_key('Active') and conf['Active']:
-                    image_xml(root,conf)
-
-    str = etree.tostring(root, pretty_print=True)
-    return str
-
 if __name__ == '__main__':
     parser = optparse.OptionParser()
 
