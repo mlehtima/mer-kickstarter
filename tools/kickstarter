@@ -158,11 +158,14 @@ class KSWriter():
         a = str(t)
         
         f = None
+        tmp_outdir = self.outdir
         if meta.has_key("Baseline"):
-            mkdir_p("%s/%s" % (self.outdir,meta['Baseline']))
-            ksFile = "%s/%s/%s.ks" % ( self.outdir, meta['Baseline'],  meta['FileName'] )
-        else:
-            ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
+            tmp_outdir = "%s/%s" % (self.outdir,meta['Baseline'])
+        
+        if not os.path.exists(tmp_outdir):
+            mkdir_p(tmp_outdir)
+        
+        ksFile = "%s/%s.ks" % ( tmp_outdir, meta['FileName'] )
         f = open(ksFile, 'w')
         print "Creating %s (%s)" %(conf['Name'], ksFile )
         f.write(a)
