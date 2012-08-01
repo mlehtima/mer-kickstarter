@@ -17,10 +17,13 @@ TEMPLATE_MODS=$(patsubst %.tmpl,%.py,$(TEMPLATES))
 KS=$(wildcard *.ks)
 
 all: tmpls
-	    python setup.py build
+	python setup.py build
 
 tmpls:
 	cd kickstart; make
+
+install: build
+	$(PYTHON) setup.py install
 
 %.py: %.tmpl
 	$(CHEETAH) compile --settings='useStackFrames=False' $<
