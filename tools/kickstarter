@@ -222,6 +222,9 @@ if __name__ == '__main__':
         out = {}
         if inp.has_key('ExternalConfigs'):
          for path in inp['ExternalConfigs']:
+            if not os.path.exists(path):
+                print "WARNING: path '%s' doesn't exist ignoring." % (path)
+                continue
             for f in os.listdir(path):
                 if f.endswith('.yaml'):
                     fp = file('%s/%s' % (path, f), 'r')
