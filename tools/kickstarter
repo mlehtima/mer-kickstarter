@@ -126,25 +126,29 @@ class KSWriter():
         if not meta.has_key('FileName') or not meta['FileName']:
             print "WARNING: Filename field missing. Ignoring config called '%s'." % meta['Name']
             return
-
-        if meta.has_key("Architecture") and meta['Architecture']:
-            for repo in repos:
-                r = {}
-                r['Name'] = repo['Name']
-                if repo.has_key('Options'):
-                    r['Options'] = repo['Options']
-                
+        
+        # Substitue repository values that are found.
+        for repo in repos:
+            r = {}
+            r['Name'] = repo['Name']
+            if repo.has_key('Options'):
+                r['Options'] = repo['Options']
+               
+            if meta.has_key("Architecture") and meta['Architecture']:
                 # Prefer RepositoryArchitecture if present, otherwise use Architecture
                 repo_arch = meta['Architecture']
                 if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
                     repo_arch = meta['RepositoryArchitecture']
                 r['Url'] = repo['Url'].replace("@ARCH@", repo_arch)
-                
-                if meta.has_key("Baseline"):
-                    r['Url'] = r['Url'].replace("@RELEASE@", meta['Baseline'])
-                new_repos.append(r)
-        else:
-            new_repos = repos
+            if meta.has_key("RepositoryURLVariables"):
+		for variable in meta['RepositoryURLVariables']:
+                    try:
+                        (key,value) = variable.split(';')
+                        r['Url'] = r['Url'].replace("%s" % (key), value) 
+                    except ValueError:
+                        print "WARNING: Ignoring invalid RepositoryURLVariables line: '%s'." % (variable)
+
+            new_repos.append(r)
 
         # Check that all repos are actually found from repos data set
         if meta.has_key("Repos"):
@@ -162,14 +166,11 @@ class KSWriter():
         a = str(t)
         
         f = None
-        tmp_outdir = self.outdir
-        if meta.has_key("Baseline"):
-            tmp_outdir = "%s/%s" % (self.outdir,meta['Baseline'])
         
-        if not os.path.exists(tmp_outdir):
-            mkdir_p(tmp_outdir)
+        if not os.path.exists(self.outdir):
+            mkdir_p(self.outdir)
         
-        ksFile = "%s/%s.ks" % ( tmp_outdir, meta['FileName'] )
+        ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
         f = open(ksFile, 'w')
         print "Creating %s (%s)" %(conf['Name'], ksFile )
         f.write(a)
