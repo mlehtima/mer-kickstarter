@@ -14,7 +14,6 @@ CHEETAH=cheetah
 TEMPLATES=$(wildcard *.tmpl)
 TEMPLATE_MODS=$(patsubst %.tmpl,%.py,$(TEMPLATES))
 .SECONDARY: $(TEMPLATE_MODS)
-KS=$(wildcard *.ks)
 
 all: tmpls
 	python setup.py build
@@ -27,10 +26,6 @@ install: build
 
 %.py: %.tmpl
 	$(CHEETAH) compile --settings='useStackFrames=False' $<
-
-
-ks: $(TEMPLATES) configurations.yaml repos.yaml
-	kickstarter -c configurations.yaml -r repos.yaml
 
 tag:
 	git tag $(VERSION)
