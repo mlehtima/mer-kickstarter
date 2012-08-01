@@ -40,82 +40,70 @@ def mkdir_p(path):
 
 
 class KSWriter():
-    def __init__(self,  im, rep, out):
-        self.image_filename = im
-        self.repo_filename = rep
+    def __init__(self, out):
         self.outdir = out
-        self.image_stream = file(self.image_filename, 'r')
-        self.repo_stream = file(self.repo_filename, 'r')
         self.extra = {}
         pass
     def merge(*input):
         return list(reduce(set.union, input, set()))
 
-    def dump(self):
-        print yaml.dump(yaml.load(self.stream))
-
-    def parse(self, img):
-        # Taking default values as a base.
-        conf = copy.copy(image_meta['Default'])
-        conf.update(img)
-
+    def parse(self, image_meta, img):
+        conf = {}
+        conf["RemovePackages"] = []
+        conf["ExtraPackages"] = []
+        # No longer "Default"
         # Updating conf with values from Inherited sections.
+        
+        def merge_dictionaries(first, second):
+            out = copy.copy(first)
+            for k,v in second.iteritems():
+                if out.has_key(k):
+                 if isinstance(out[k], list) and isinstance(v, list):
+                   temp = copy.copy(v)
+                   temp.extend(out[k])
+                   out[k] = temp
+                 elif isinstance(out[k], list) or isinstance(v, list):
+                   print "Type mismatch, list vs not in %s" % k
+                   continue
+                 else: 
+                   out[k] = v
+                else:
+                   out[k] = v
+            return out
+                
+        
         if img.has_key('Inherit'):
             for x in img["Inherit"]:
                 if not image_meta.has_key(x):
                     print "WARNING: Unable to find inherit section '%s' ignoring." % x
                     continue
-                conf.update(image_meta[x])
-
-        # Legacy support for "Platform" section
-        if img.has_key('Platform'):
-            conf.update(image_meta[img['Platform']])
-
-        # Merging lists from default and Inherited.
-        lvald = {}
-        lval = ['Repos', 'Groups', 'PostScripts', 'NoChrootScripts', 'RemovePackages', 'ExtraPackages']
-        for l in lval:
-            full = []
-            if image_meta['Default'].has_key(l) and image_meta['Default'][l]:
-                 full = full + image_meta['Default'][l]
-            if img.has_key('Inherit'):
-                for x in img['Inherit']:
-                    if not image_meta.has_key(x):
-                        continue
-                    plat = image_meta[x]
-                    if plat.has_key(l) and plat[l]:
-                        full = full + plat[l]
-            if img.has_key('Platform'):
-                plat = image_meta[img['Platform']]
-                if plat.has_key(l) and plat[l]:
-                    full = full + plat[l]
-            if img.has_key(l) and img[l]:
-                full = full + img[l]
-            lvald[l] = sorted(set(full), key=full.index)
-            conf.update(lvald)
-
+                conf = merge_dictionaries(conf, image_meta[x])    
+        conf = merge_dictionaries(conf, img)
+        
         postscript = ""
-        for scr in conf['PostScripts']:
-            if os.path.exists('./custom/scripts/%s.post' %scr):
-                f = open('./custom/scripts/%s.post' %scr, 'r')
+        if conf.has_key('PostScripts'):
+         for scr in conf['PostScripts']:
+            if os.path.exists(scr):
+                f = open(scr, 'r')
                 postscript += f.read()
                 postscript += "\n"
                 f.close()
             else:
-                print 'WARNING: ./custom/scripts/%s.post not found, skipping.' %scr
+                print 'WARNING: %s not found, skipping.' %scr
 
         nochrootscript = ""
-        for scr in conf['NoChrootScripts']:
-            if os.path.exists('./custom/scripts/%s.nochroot' %scr):
-                f = open('./custom/scripts/%s.nochroot' %scr, 'r')
+        if conf.has_key('NoChrootScripts'): 
+         for scr in conf['NoChrootScripts']:
+            if os.path.exists(scr):
+                f = open(scr, 'r')
                 nochrootscript += f.read()
                 nochrootscript += "\n"
                 f.close()
             else:
-                print 'WARNING: ./custom/scripts/%s.nochroot not found, skipping.' %scr
+                print 'WARNING: %s not found, skipping.' %scr
 
         if conf.has_key("Part"):
-            partfn = "./custom/part/%s" % conf['Part']
+            partfn = conf['Part']
             if os.path.exists( partfn ):
                 f = open( partfn )
                 conf['Part'] = f.read()
@@ -231,15 +219,10 @@ if __name__ == '__main__':
                     help="configuration meta file")
     parser.add_option("-o", "--outdir", type="string", dest="outdir",
                     help="outdir", default=".")
-    parser.add_option("-r", "--repos", type="string", dest="repofile",
-                    help="repo meta file")
-    parser.add_option("-i", "--index", type="string", dest="indexfile",
-                    help="generate index file")
-
     (options, args) = parser.parse_args()
 
-    if options.configsfile is None or options.repofile is None:
-        print "you need to provide meta files with --configs and --repos"
+    if options.configsfile is None:
+        print "you need to provide meta file with --configs"
         sys.exit(1)
 
     outdir = ""
@@ -247,34 +230,50 @@ if __name__ == '__main__':
         outdir = "."
     else:
         outdir = options.outdir
+    
+    def recursive_yaml_load(stream):
+        inp = yaml.load(stream)
+        out = {}
+        if inp.has_key('ExternalConfigs'):
+         for path in inp['ExternalConfigs']:
+            for f in os.listdir(path):
+                if f.endswith('.yaml'):
+                    fp = file('%s/%s' % (path, f), 'r')
+                    ext = recursive_yaml_load(fp)
+                    for k,v in ext.iteritems():
+                        if inp.has_key(k) and isinstance(v, list) and not isinstance(inp[k], list):
+                            print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                            break  
+                        elif inp.has_key(k) and not isinstance(v, list) and isinstance(inp[k], list):
+                            print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                            break  
+                        elif inp.has_key(k) and not isinstance(v, list):
+                            print "Collision of values: %s in %s/%s" % (k, path, f)
+                            break
+                        elif inp.has_key(k) and isinstance(v, list):
+                            # External configs come first
+                            v.extend(inp[k])
+                            out[k] = v
+                        else:
+                            out[k] = v
+                    for k,v in inp.iteritems():
+                        # we already merged if it's already there
+                        if not out.has_key(k):
+                            out[k] = v
+                    inp = out
+                    out = {}
+                            
+        return inp
 
-    ks = KSWriter(options.configsfile, options.repofile, outdir)
-    repo_meta = yaml.load(ks.repo_stream)
-    image_meta = yaml.load(ks.image_stream)
+    ks = KSWriter(outdir)
+    image_meta = recursive_yaml_load(file(options.configsfile, 'r'))
 
-    r = repo_meta['Repositories']
+    r = image_meta['Repositories']
     if image_meta.has_key('Configurations'):
         for img in image_meta['Configurations']:
-            conf = ks.parse(img)
+            conf = ks.parse(image_meta, img)
             if conf.has_key('Active') and conf['Active']:
                 ks.process_files(conf, r)
             else:
                 print "%s is inactive, not generate %s this time" %(img['Name'], img['FileName'] )
-    for path in image_meta['ExternalConfigs']:
-        for f in os.listdir(path):
-            if f.endswith('.yaml'):
-                fp = file('%s/%s' %(path, f), 'r')
-                local = yaml.load(fp)
-                conf = ks.parse(local)
-                if conf.has_key('Active') and conf['Active']:
-                    ks.process_files(conf, r)
-                else:
-                    print "%s is inactive, not generate %s this time" %(conf['Name'], conf['FileName'] )
-            elif not f.endswith('~'):
-                print "WARNING: File '%s/%s' ignored." % (path,f)
 
-    if options.indexfile:
-        str = create_xml(image_meta)
-        f = open(options.indexfile, 'w')
-        f.write(str)
-        f.close()
