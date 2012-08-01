@@ -70,7 +70,25 @@ class KSWriter():
                 else:
                    out[k] = v
             return out
-                
+        
+        def read_config_file(image_meta,config_file):
+            output = ''
+            path = None
+            if os.path.exists(config_file):
+                path = config_file
+            elif image_meta.has_key('ExternalConfigs'):
+                for extconfdir in image_meta['ExternalConfigs']:
+                    if os.path.exists('%s/%s' % (extconfdir,config_file)):
+                        path = '%s/%s' % (extconfdir,config_file)
+                        break
+            if path:
+                f = open(path, 'r')
+                output += f.read()
+                output += "\n"
+                f.close()
+            else:
+                print 'WARNING: %s not found, skipping.' % config_file
+            return output
         
         if img.has_key('Inherit'):
             for x in img["Inherit"]:
@@ -82,32 +100,18 @@ class KSWriter():
         
         postscript = ""
         if conf.has_key('PostScripts'):
-         for scr in conf['PostScripts']:
-            if os.path.exists(scr):
-                f = open(scr, 'r')
-                postscript += f.read()
-                postscript += "\n"
-                f.close()
-            else:
-                print 'WARNING: %s not found, skipping.' %scr
+            for scr in conf['PostScripts']:
+                postscript += read_config_file(image_meta,scr)
 
         nochrootscript = ""
         if conf.has_key('NoChrootScripts'): 
-         for scr in conf['NoChrootScripts']:
-            if os.path.exists(scr):
-                f = open(scr, 'r')
-                nochrootscript += f.read()
-                nochrootscript += "\n"
-                f.close()
-            else:
-                print 'WARNING: %s not found, skipping.' %scr
+            for scr in conf['NoChrootScripts']:
+                nochrootscript += read_config_file(image_meta,scr)
 
         if conf.has_key("Part"):
-            partfn = conf['Part']
-            if os.path.exists( partfn ):
-                f = open( partfn )
-                conf['Part'] = f.read()
-                f.close()
+            part_output = read_config_file(image_meta,conf['Part'])
+            if part_output != '':
+               conf['Part'] = part_output
             else:
                 print "WARNING: %s not found" % partfn
                 del conf['Part']
