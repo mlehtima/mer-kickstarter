@@ -137,7 +137,7 @@ class KSWriter():
                 # Prefer RepositoryArchitecture if present, otherwise use Architecture
                 repo_arch = meta['Architecture']
                 if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
-                    repo_arch = meta['RepositoryArchitecture']                                            
+                    repo_arch = meta['RepositoryArchitecture']
                 r['Url'] = repo['Url'].replace("@ARCH@", repo_arch)
                 
                 if meta.has_key("Baseline"):
