@@ -225,8 +225,10 @@ if __name__ == '__main__':
     def recursive_yaml_load(stream):
         inp = yaml.load(stream)
         out = {}
-        if inp.has_key('ExternalConfigs'):
-         for path in inp['ExternalConfigs']:
+        if not inp.has_key('ExternalConfigs'):
+            return inp
+
+        for path in inp['ExternalConfigs']:
             if not os.path.exists(path):
                 print "WARNING: path '%s' doesn't exist ignoring." % (path)
                 continue
