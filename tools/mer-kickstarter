@@ -49,10 +49,6 @@ class KSWriter():
 
     def parse(self, image_meta, configuration):
         conf = {}
-        conf["RemovePackages"] = []
-        conf["ExtraPackages"] = []
-        # No longer "Default"
-        # Updating conf with values from Inherited sections.
         
         def merge_dictionaries(first, second):
             out = copy.copy(first)
@@ -89,13 +85,25 @@ class KSWriter():
                 print 'WARNING: %s not found, skipping.' % config_file
             return output
         
+        def recursive_inherit(conf, image_meta, already_inherited):
+            if conf.has_key("Inherit") and conf["Inherit"]:
+                inherit_list = conf["Inherit"]
+                conf["Inherit"] = []
+                for x in inherit_list:
+                    if x in already_inherited:
+                        continue
+                    already_inherited.append(x)
+                    if not image_meta.has_key(x):
+                        print "WARNING: Unable to find inherit section '%s' ignoring." % x
+                        continue
+                    print "Merging %s" % (x)
+                    conf = merge_dictionaries(conf, image_meta[x])
+                conf = recursive_inherit(conf, image_meta, already_inherited)
+            return conf
+
+        already_inherited = []
         if configuration.has_key('Inherit') and configuration["Inherit"]:
-            for x in configuration["Inherit"]:
-                if not image_meta.has_key(x):
-                    print "WARNING: Unable to find inherit section '%s' ignoring." % x
-                    continue
-                conf = merge_dictionaries(conf, image_meta[x])    
-        conf = merge_dictionaries(conf, configuration)
+            conf = recursive_inherit(configuration, image_meta, already_inherited)
         
         postscript = ""
         if conf.has_key('PostScripts'):

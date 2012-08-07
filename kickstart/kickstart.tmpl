@@ -91,12 +91,16 @@ repo --name=${r} --baseurl=${repo_url} ${repo_options}
 $metadata.Kernel
 
 #end if
+#if $metadata.has_key("ExtraPackages")
 #for $e in $metadata.ExtraPackages
 ${e}
 #end for
+#end if
+#if $metadata.has_key("RemovePackages")
 #for $e in $metadata.RemovePackages
 -${e}
 #end for
+#end if
 %end
 #if $metadata.has_key("Post")
 
