@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Anas Nashif <anas.nashif@intel.com>
-import yaml,  sys
+import yaml, sys
 import re, os
 from kickstart import kickstart
 
@@ -63,9 +63,8 @@ class KSWriter():
                        temp.extend(out[k])
                        out[k] = temp
                    elif isinstance(out[k], list) or isinstance(v, list):
-                       print "Type mismatch, list vs not in %s" % k
-                       continue
-                   else: 
+                       sys.exit("Error: Type mismatch. Can not combine list with non-list for field '%s'" % k)
+                   else:
                        out[k] = v
                 else:
                    out[k] = v
