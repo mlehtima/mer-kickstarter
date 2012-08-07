@@ -61,7 +61,7 @@ user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.
 #for $rr in $repos
 #if $rr.Name == $r
 #set $repo_url = $rr.Url
-#if $rr.has_key("Options")
+#if $rr.has_key("Options") and $rr.Options
 #set $repo_options += " "+$rr.Options
 #end if
 #end if
