@@ -124,7 +124,7 @@ class KSWriter():
         new_repos = []
 
         if not meta.has_key('FileName') or not meta['FileName']:
-            print "WARNING: Filename field missing. Ignoring config called '%s'." % meta['Name']
+            print "WARNING: FileName field missing. Ignoring config called '%s'." % meta['Name']
             return
         
         # Substitue repository values that are found.
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     def recursive_yaml_load(stream,read_yaml_files):
         inp = yaml.load(stream)
         out = {}
-        if not inp.has_key('ExternalConfigs'):
+        if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
             return inp
 
         for path in inp['ExternalConfigs']:
@@ -246,12 +246,20 @@ if __name__ == '__main__':
     read_yaml_files = [ options.configsfile ]
     image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files)
 
-    r = image_meta['Repositories']
-    if image_meta.has_key('Configurations'):
+    repositories = None
+    if image_meta.has_key('Repositories') and image_meta['Repositories']:
+        repositories = image_meta['Repositories']
+
+    if image_meta.has_key('Configurations') and image_meta['Configurations']:
         for img in image_meta['Configurations']:
             conf = ks.parse(image_meta, img)
             if conf.has_key('Active') and conf['Active']:
-                ks.process_files(conf, r)
+                ks.process_files(conf, repositories)
             else:
-                print "%s is inactive, not generate %s this time" %(img['Name'], img['FileName'] )
+                filename = None
+                if img.has_key('Filename') and img['Filename']:
+                   filename = img['Filename']
+                print "%s is inactive, not generating file '%s' this time." %(img['Name'], filename)
+    else:
+        print "WARNING: No 'Configurations' found from yaml."
 
