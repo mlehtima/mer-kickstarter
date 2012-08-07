@@ -52,16 +52,24 @@ user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.
 #if $metadata.has_key("RepositoryOptions")
 #set $options_global = $metadata.RepositoryOptions
 #end if
+## Go though repositories mentioned for this config
 #for $r in $metadata.Repos
+## Use global options by default
+#set $repo_options = $options_global
+#set $repo_url = ""
+## Search through all repos available in .yaml
 #for $rr in $repos
 #if $rr.Name == $r
-#set $options_repo = $options_global
+#set $repo_url = $rr.Url
 #if $rr.has_key("Options")
-#set $options_repo += " "+$rr.Options
+#set $repo_options += " "+$rr.Options
 #end if
-repo --name=${r} --baseurl=${rr.Url} ${options_repo}
 #end if
 #end for
+#if $repo_url != ""
+## We found a repository \o/
+repo --name=${r} --baseurl=${repo_url} ${repo_options}
+#end if
 #end for
 
 #if $metadata.has_key("PackageArgs")
@@ -70,9 +78,11 @@ repo --name=${r} --baseurl=${rr.Url} ${options_repo}
 %packages
 #end if
 
+#if $metadata.has_key("Groups")
 #for $g in $metadata.Groups
 @${g}
 #end for
+#end if
 
 #if $metadata.has_key("Kernel")
 $metadata.Kernel
