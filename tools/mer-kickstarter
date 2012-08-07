@@ -120,7 +120,7 @@ class KSWriter():
         conf['NoChroot'] = nochrootscript
         return conf
 
-    def process_files(self,  meta,  repos):
+    def process_files(self, meta, repos, global_repo_url_vars):
         new_repos = []
 
         if not meta.has_key('FileName') or not meta['FileName']:
@@ -141,13 +141,20 @@ class KSWriter():
                 if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
                     repo_arch = meta['RepositoryArchitecture']
                 r['Url'] = r['Url'].replace("@ARCH@", repo_arch)
-            if meta.has_key("RepositoryURLVariables"):
+            if meta.has_key("RepositoryURLVariables") and meta['RepositoryURLVariables']:
 		for variable in meta['RepositoryURLVariables']:
                     try:
                         (key,value) = variable.split(';')
                         r['Url'] = r['Url'].replace("%s" % (key), value) 
                     except ValueError:
                         print "WARNING: Ignoring invalid RepositoryURLVariables line: '%s'." % (variable)
+            if global_repo_url_vars:
+                for variable in global_repo_url_vars:
+                    try:
+                        (key,value) = variable.split(';')
+                        r['Url'] = r['Url'].replace("%s" % (key), value)
+                    except ValueError:
+                        print "WARNING: Ignoring invalid global RepositoryURLVariables line: '%s'." % (variable)
 
             new_repos.append(r)
 
@@ -248,14 +255,18 @@ if __name__ == '__main__':
     image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files)
 
     repositories = None
+    global_repo_url_vars = None
     if image_meta.has_key('Repositories') and image_meta['Repositories']:
         repositories = image_meta['Repositories']
+
+    if image_meta.has_key('RepositoryURLVariables') and image_meta['RepositoryURLVariables']:
+        global_repo_url_vars = image_meta['RepositoryURLVariables']
 
     if image_meta.has_key('Configurations') and image_meta['Configurations']:
         for img in image_meta['Configurations']:
             conf = ks.parse(image_meta, img)
             if conf.has_key('Active') and conf['Active']:
-                ks.process_files(conf, repositories)
+                ks.process_files(conf, repositories, global_repo_url_vars)
             else:
                 filename = None
                 if img.has_key('Filename') and img['Filename']:
