@@ -115,8 +115,10 @@ class KSWriter():
                 print "WARNING: %s not found" % partfn
                 del conf['Part']
 
-        conf['Post'] = postscript
-        conf['NoChroot'] = nochrootscript
+        if postscript:
+            conf['Post'] = postscript
+        if nochrootscript:
+            conf['NoChroot'] = nochrootscript
         return conf
 
     def process_files(self, meta, repos, global_repo_url_vars):

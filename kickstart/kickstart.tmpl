@@ -34,8 +34,8 @@ bootloader #slurp
 #if $metadata.has_key("BootloaderOptions") 
   ${metadata.BootloaderOptions}
 #end if
-
 #if $metadata.has_key("Desktop")
+
 desktop #slurp
 #if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
 --autologinuser=${metadata.DefaultUser}  #slurp
@@ -45,11 +45,10 @@ desktop #slurp
 #end if
 #if $metadata.has_key("Session")
 --session="${metadata.Session}"
-#else
-
 #end if
 #end if
 #if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
+
 user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.DefaultUserPass} 
 #end if
 
@@ -82,17 +81,16 @@ repo --name=${r} --baseurl=${repo_url} ${repo_options}
 #else
 %packages
 #end if
-
 #if $metadata.has_key("Groups")
 #for $g in $metadata.Groups
 @${g}
 #end for
-#end if
 
+#end if
 #if $metadata.has_key("Kernel")
 $metadata.Kernel
-#end if
 
+#end if
 #for $e in $metadata.ExtraPackages
 ${e}
 #end for
@@ -100,11 +98,15 @@ ${e}
 -${e}
 #end for
 %end
+#if $metadata.has_key("Post")
 
 %post
 ${metadata.Post}
 %end
+#end if
+#if $metadata.has_key("NoChroot")
 
 %post --nochroot
 ${metadata.NoChroot}
 %end
+#end if
