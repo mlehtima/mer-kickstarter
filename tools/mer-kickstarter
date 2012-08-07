@@ -161,6 +161,10 @@ class KSWriter():
 
         # Check that all repos are actually found from repos data set
         if meta.has_key("Repos"):
+            # Convert list to set to remove duplicated entries.
+            # NOTE: This mixes the order that repos were introduced, but that 
+            # shouldn't matter as all the handling is already over.
+            meta['Repos'] = set(meta['Repos'])
             for selected_repo in meta['Repos']:
                 found = False
                 for repo in repos:
