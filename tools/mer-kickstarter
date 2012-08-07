@@ -89,7 +89,7 @@ class KSWriter():
                 print 'WARNING: %s not found, skipping.' % config_file
             return output
         
-        if img.has_key('Inherit'):
+        if img.has_key('Inherit') and img["Inherit"]:
             for x in img["Inherit"]:
                 if not image_meta.has_key(x):
                     print "WARNING: Unable to find inherit section '%s' ignoring." % x
