@@ -195,7 +195,7 @@ if __name__ == '__main__':
     else:
         outdir = options.outdir
     
-    def recursive_yaml_load(stream):
+    def recursive_yaml_load(stream,read_yaml_files):
         inp = yaml.load(stream)
         out = {}
         if not inp.has_key('ExternalConfigs'):
@@ -207,8 +207,16 @@ if __name__ == '__main__':
                 continue
             for f in os.listdir(path):
                 if f.endswith('.yaml'):
-                    fp = file('%s/%s' % (path, f), 'r')
-                    ext = recursive_yaml_load(fp)
+                    filename = '%s/%s' % (path, f)
+
+                    # Prevent infinite recusion loops
+                    if filename in read_yaml_files:
+                        print "WARNING: File '%s' already read, ignoring the file." % (filename)
+                        continue
+                    read_yaml_files.append(filename)
+
+                    fp = file(filename, 'r')
+                    ext = recursive_yaml_load(fp, read_yaml_files)
                     for k,v in ext.iteritems():
                         if inp.has_key(k) and isinstance(v, list) and not isinstance(inp[k], list):
                             print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
@@ -235,7 +243,8 @@ if __name__ == '__main__':
         return inp
 
     ks = KSWriter(outdir)
-    image_meta = recursive_yaml_load(file(options.configsfile, 'r'))
+    read_yaml_files = [ options.configsfile ]
+    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files)
 
     r = image_meta['Repositories']
     if image_meta.has_key('Configurations'):
