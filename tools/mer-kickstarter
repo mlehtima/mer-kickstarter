@@ -47,7 +47,7 @@ class KSWriter():
     def merge(*input):
         return list(reduce(set.union, input, set()))
 
-    def parse(self, image_meta, img):
+    def parse(self, image_meta, configuration):
         conf = {}
         conf["RemovePackages"] = []
         conf["ExtraPackages"] = []
@@ -89,13 +89,13 @@ class KSWriter():
                 print 'WARNING: %s not found, skipping.' % config_file
             return output
         
-        if img.has_key('Inherit') and img["Inherit"]:
-            for x in img["Inherit"]:
+        if configuration.has_key('Inherit') and configuration["Inherit"]:
+            for x in configuration["Inherit"]:
                 if not image_meta.has_key(x):
                     print "WARNING: Unable to find inherit section '%s' ignoring." % x
                     continue
                 conf = merge_dictionaries(conf, image_meta[x])    
-        conf = merge_dictionaries(conf, img)
+        conf = merge_dictionaries(conf, configuration)
         
         postscript = ""
         if conf.has_key('PostScripts'):
@@ -268,15 +268,15 @@ if __name__ == '__main__':
         global_repo_url_vars = image_meta['RepositoryURLVariables']
 
     if image_meta.has_key('Configurations') and image_meta['Configurations']:
-        for img in image_meta['Configurations']:
-            conf = ks.parse(image_meta, img)
+        for configuration in image_meta['Configurations']:
+            conf = ks.parse(image_meta, configuration)
             if conf.has_key('Active') and conf['Active']:
                 ks.process_files(conf, repositories, global_repo_url_vars)
             else:
                 filename = None
-                if img.has_key('Filename') and img['Filename']:
-                   filename = img['Filename']
-                print "%s is inactive, not generating file '%s' this time." %(img['Name'], filename)
+                if configuration.has_key('Filename') and configuration['Filename']:
+                   filename = configuration['Filename']
+                print "%s is inactive, not generating file '%s' this time." %(configuration['Name'], filename)
     else:
         print "WARNING: No 'Configurations' found from yaml."
 
