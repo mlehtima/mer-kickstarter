@@ -36,7 +36,10 @@ bootloader #slurp
 #end if
 
 #if $metadata.has_key("Desktop")
-desktop --autologinuser=${metadata.DefaultUser}  #slurp
+desktop #slurp
+#if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
+--autologinuser=${metadata.DefaultUser}  #slurp
+#end if
 #if $metadata.Desktop != "None"
 --defaultdesktop=${metadata.Desktop} #slurp
 #end if
@@ -46,7 +49,9 @@ desktop --autologinuser=${metadata.DefaultUser}  #slurp
 
 #end if
 #end if
+#if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
 user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.DefaultUserPass} 
+#end if
 
 #set $options_global = ""
 #if $metadata.has_key("RepositoryOptions")
