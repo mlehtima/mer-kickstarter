@@ -176,33 +176,6 @@ class KSWriter():
         f.write(a)
         f.close()
 
-def image_xml(root, img):
-    s = etree.Element("config")
-    c = etree.Element('name')
-    c.text = "%s.ks" %img['FileName']
-    s.append(c)
-    cc = etree.Element('path')
-    cc.text = "image-configs/%s.ks" %img['FileName']
-    s.append(cc)
-    cc = etree.Element('description')
-    cc.text = "%s" %img['Name']
-    s.append(cc)
-
-    if img.has_key('Architecture'):
-        cc = etree.Element('arch')
-        cc.text = "%s" %img['Architecture']
-        s.append(cc)
-
-    cc = etree.Element('md5')
-    cc.text = ""
-    s.append(cc)
-
-    cc = etree.Element('schedule')
-    if img.has_key('Schedule'):
-        cc.text = img['Schedule']
-    s.append(cc)
-    root.append(s)
-
 if __name__ == '__main__':
     parser = optparse.OptionParser()
 
