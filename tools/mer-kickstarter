@@ -198,7 +198,7 @@ def recursive_yaml_load(stream,read_yaml_files, ext_conf_path = None):
     inp = yaml.load(stream)
     out = {}
     if ext_conf_path:
-        if inp.has_key('ExternalConfigs'):
+        if inp.has_key('ExternalConfigs') and inp['ExternalConfigs']:
             inp['ExternalConfigs'].append(ext_conf_path)
         else:
             inp['ExternalConfigs'] = [ext_conf_path]
