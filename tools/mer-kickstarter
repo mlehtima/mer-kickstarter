@@ -194,14 +194,14 @@ class KSWriter():
         f.write(a)
         f.close()
 
-def recursive_yaml_load(stream,read_yaml_files, externalconfigs = None):
+def recursive_yaml_load(stream,read_yaml_files, ext_conf_path = None):
     inp = yaml.load(stream)
     out = {}
-    if externalconfigs:
+    if ext_conf_path:
         if inp.has_key('ExternalConfigs'):
-            inp['ExternalConfigs'].append(externalconfigs)
+            inp['ExternalConfigs'].append(ext_conf_path)
         else:
-            inp['ExternalConfigs'] = [externalconfigs]
+            inp['ExternalConfigs'] = [ext_conf_path]
     
     if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
         return inp
@@ -254,7 +254,7 @@ if __name__ == '__main__':
                     help="configuration meta file")
     parser.add_option("-o", "--outdir", type="string", dest="outdir",
                     help="outdir", default=".")
-    parser.add_option("-e", "--external-configs-path", type="string", dest="externalconfigs",
+    parser.add_option("-e", "--external-config-path", type="string", dest="ext_conf_path",
                     help="directory containing external configs", default=None)
     parser.add_option("-r", "--repo-url-variables", type="string", dest="repo_url_variables",
                     help="Repository URL variables.", default=None)
@@ -269,7 +269,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     read_yaml_files = [ options.configsfile ]
-    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files, options.externalconfigs)
+    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files, options.ext_conf_path)
 
     repositories = None
     global_repo_url_vars = {}
