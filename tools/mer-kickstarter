@@ -127,7 +127,9 @@ class KSWriter():
 
     def __handle_repo_url_vars(self, r, var_dict):
         for pair in var_dict:
-            if pair and isinstance(pair,dict):
+            if not pair:
+                continue
+            elif isinstance(pair,dict):
                 (key,value) = pair.popitem()
                 r['Url'] = r['Url'].replace("%s" % (key), value)
             else:
