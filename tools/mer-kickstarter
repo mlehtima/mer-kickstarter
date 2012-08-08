@@ -125,6 +125,15 @@ class KSWriter():
             conf['NoChroot'] = nochrootscript
         return conf
 
+    def __handle_repo_url_vars(self, r, var_dict):
+        for pair in var_dict:
+            if pair and isinstance(pair,dict):
+                (key,value) = pair.popitem()
+                r['Url'] = r['Url'].replace("%s" % (key), value)
+            else:
+                print "WARNING: Ignoring '%s' repository URL variable." % (pair)
+        return r
+        
     def process_files(self, meta, repos, global_repo_url_vars):
         new_repos = []
 
@@ -146,20 +155,12 @@ class KSWriter():
                 if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
                     repo_arch = meta['RepositoryArchitecture']
                 r['Url'] = r['Url'].replace("@ARCH@", repo_arch)
+            
             if meta.has_key("RepositoryURLVariables") and meta['RepositoryURLVariables']:
-		for variable in meta['RepositoryURLVariables']:
-                    try:
-                        (key,value) = variable.split(';')
-                        r['Url'] = r['Url'].replace("%s" % (key), value) 
-                    except ValueError:
-                        print "WARNING: Ignoring invalid RepositoryURLVariables line: '%s'." % (variable)
+                self.__handle_repo_url_vars(r,meta['RepositoryURLVariables'])
+            
             if global_repo_url_vars:
-                for variable in global_repo_url_vars:
-                    try:
-                        (key,value) = variable.split(';')
-                        r['Url'] = r['Url'].replace("%s" % (key), value)
-                    except ValueError:
-                        print "WARNING: Ignoring invalid global RepositoryURLVariables line: '%s'." % (variable)
+                self.__handle_repo_url_vars(r,global_repo_url_vars)
 
             new_repos.append(r)
 
@@ -255,6 +256,8 @@ if __name__ == '__main__':
                     help="outdir", default=".")
     parser.add_option("-e", "--external-configs-path", type="string", dest="externalconfigs",
                     help="directory containing external configs", default=None)
+    parser.add_option("-r", "--repo-url-variables", type="string", dest="repo_url_variables",
+                    help="Repository URL variables.", default=None)
     (options, args) = parser.parse_args()
 
     if options.configsfile is None:
@@ -269,13 +272,31 @@ if __name__ == '__main__':
     image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files, options.externalconfigs)
 
     repositories = None
-    global_repo_url_vars = None
+    global_repo_url_vars = {}
     if image_meta.has_key('Repositories') and image_meta['Repositories']:
         repositories = image_meta['Repositories']
 
     if image_meta.has_key('RepositoryURLVariables') and image_meta['RepositoryURLVariables']:
         global_repo_url_vars = image_meta['RepositoryURLVariables']
-
+    
+    if options.repo_url_variables:
+        try:
+            variable_pairs = options.repo_url_variables.split(",")
+            var_dict = {}
+            for var in variable_pairs:
+                if not var:
+                    continue
+                try:
+                    (key,value) = var.split(":")
+                    var_dict = dict(var_dict.items()+ {key:value}.items())
+                except:
+                    print "ERROR: invalid repo URL variable '%s' given on cmdline." % (var)
+                    sys.exit(1)
+            global_repo_url_vars.append(var_dict)
+        except ValueError:
+            print "ERROR: Invalid value given for repository URL variables '%s'" % (options.repo_url_variables)
+            sys.exit(1)
+    
     if image_meta.has_key('Configurations') and image_meta['Configurations']:
         ks = KSWriter(options.outdir)
         for configuration in image_meta['Configurations']:
