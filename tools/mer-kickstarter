@@ -264,6 +264,11 @@ if __name__ == '__main__':
         return inp
 
     ks = KSWriter(outdir)
+
+    if not os.path.isfile(options.configsfile):
+        print "ERROR: Given configuration file is not file '%s'." % (options.configsfile)
+        sys.exit(1)
+
     read_yaml_files = [ options.configsfile ]
     image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files)
 
