@@ -44,79 +44,80 @@ class KSWriter():
         self.outdir = out
         self.extra = {}
         pass
+      
     def merge(*input):
         return list(reduce(set.union, input, set()))
+
+    def __merge_dictionaries(self, first, second):
+        out = copy.copy(first)
+        for k,v in second.iteritems():
+            if out.has_key(k):
+                if isinstance(out[k], list) and isinstance(v, list):
+                    temp = copy.copy(v)
+                    temp.extend(out[k])
+                    out[k] = temp
+                elif isinstance(out[k], list) or isinstance(v, list):
+                    sys.exit("Error: Type mismatch. Can not combine list with non-list for field '%s'" % k)
+                else:
+                    out[k] = v
+            else:
+                out[k] = v
+        return out
+    
+    def __read_config_file(self, image_meta,config_file):
+        output = ''
+        path = None
+        if os.path.exists(config_file):
+            path = config_file
+        elif image_meta.has_key('ExternalConfigs'):
+            for extconfdir in image_meta['ExternalConfigs']:
+                if os.path.exists('%s/%s' % (extconfdir,config_file)):
+                    path = '%s/%s' % (extconfdir,config_file)
+                    break
+        if path:
+            f = open(path, 'r')
+            output += f.read()
+            output += "\n"
+            f.close()
+        else:
+            print 'WARNING: %s not found, skipping.' % config_file
+        return output
+    
+    def __recursive_inherit(self, conf, image_meta, already_inherited):
+        if conf.has_key("Inherit") and conf["Inherit"]:
+            inherit_list = conf["Inherit"]
+            conf["Inherit"] = []
+            for x in inherit_list:
+                if x in already_inherited:
+                    continue
+                already_inherited.append(x)
+                if not image_meta.has_key(x):
+                    print "WARNING: Unable to find inherit section '%s' ignoring." % x
+                    continue
+                print "Merging %s" % (x)
+                conf = self.__merge_dictionaries(conf, image_meta[x])
+            conf = self.__recursive_inherit(conf, image_meta, already_inherited)
+        return conf
 
     def parse(self, image_meta, configuration):
         conf = {}
         
-        def merge_dictionaries(first, second):
-            out = copy.copy(first)
-            for k,v in second.iteritems():
-                if out.has_key(k):
-                   if isinstance(out[k], list) and isinstance(v, list):
-                       temp = copy.copy(v)
-                       temp.extend(out[k])
-                       out[k] = temp
-                   elif isinstance(out[k], list) or isinstance(v, list):
-                       sys.exit("Error: Type mismatch. Can not combine list with non-list for field '%s'" % k)
-                   else:
-                       out[k] = v
-                else:
-                   out[k] = v
-            return out
-        
-        def read_config_file(image_meta,config_file):
-            output = ''
-            path = None
-            if os.path.exists(config_file):
-                path = config_file
-            elif image_meta.has_key('ExternalConfigs'):
-                for extconfdir in image_meta['ExternalConfigs']:
-                    if os.path.exists('%s/%s' % (extconfdir,config_file)):
-                        path = '%s/%s' % (extconfdir,config_file)
-                        break
-            if path:
-                f = open(path, 'r')
-                output += f.read()
-                output += "\n"
-                f.close()
-            else:
-                print 'WARNING: %s not found, skipping.' % config_file
-            return output
-        
-        def recursive_inherit(conf, image_meta, already_inherited):
-            if conf.has_key("Inherit") and conf["Inherit"]:
-                inherit_list = conf["Inherit"]
-                conf["Inherit"] = []
-                for x in inherit_list:
-                    if x in already_inherited:
-                        continue
-                    already_inherited.append(x)
-                    if not image_meta.has_key(x):
-                        print "WARNING: Unable to find inherit section '%s' ignoring." % x
-                        continue
-                    print "Merging %s" % (x)
-                    conf = merge_dictionaries(conf, image_meta[x])
-                conf = recursive_inherit(conf, image_meta, already_inherited)
-            return conf
-
         already_inherited = []
         if configuration.has_key('Inherit') and configuration["Inherit"]:
-            conf = recursive_inherit(configuration, image_meta, already_inherited)
+            conf = self.__recursive_inherit(configuration, image_meta, already_inherited)
         
         postscript = ""
         if conf.has_key('PostScripts'):
             for scr in conf['PostScripts']:
-                postscript += read_config_file(image_meta,scr)
+                postscript += self.__read_config_file(image_meta,scr)
 
         nochrootscript = ""
         if conf.has_key('NoChrootScripts'): 
             for scr in conf['NoChrootScripts']:
-                nochrootscript += read_config_file(image_meta,scr)
+                nochrootscript += self.__read_config_file(image_meta,scr)
 
         if conf.has_key("Part"):
-            part_output = read_config_file(image_meta,conf['Part'])
+            part_output = self.__read_config_file(image_meta,conf['Part'])
             if part_output != '':
                conf['Part'] = part_output
             else:
@@ -197,6 +198,53 @@ class KSWriter():
         f.write(a)
         f.close()
 
+def recursive_yaml_load(stream,read_yaml_files):
+    inp = yaml.load(stream)
+    out = {}
+    if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
+        return inp
+
+    for path in inp['ExternalConfigs']:
+        if not os.path.exists(path):
+            print "WARNING: path '%s' doesn't exist ignoring." % (path)
+            continue
+        for f in os.listdir(path):
+            if f.endswith('.yaml'):
+                filename = '%s/%s' % (path, f)
+
+                # Prevent infinite recusion loops
+                if filename in read_yaml_files:
+                    print "WARNING: File '%s' already read, ignoring the file." % (filename)
+                    continue
+                read_yaml_files.append(filename)
+
+                fp = file(filename, 'r')
+                ext = recursive_yaml_load(fp, read_yaml_files)
+                for k,v in ext.iteritems():
+                    if inp.has_key(k) and isinstance(v, list) and not isinstance(inp[k], list):
+                        print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                        break  
+                    elif inp.has_key(k) and not isinstance(v, list) and isinstance(inp[k], list):
+                        print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                        break  
+                    elif inp.has_key(k) and not isinstance(v, list):
+                        print "Collision of values: %s in %s/%s" % (k, path, f)
+                        break
+                    elif inp.has_key(k) and isinstance(v, list):
+                        # External configs come first
+                        v.extend(inp[k])
+                        out[k] = v
+                    else:
+                        out[k] = v
+                for k,v in inp.iteritems():
+                    # we already merged if it's already there
+                    if not out.has_key(k):
+                        out[k] = v
+                inp = out
+                out = {}
+                        
+    return inp
+
 if __name__ == '__main__':
     parser = optparse.OptionParser()
 
@@ -216,53 +264,6 @@ if __name__ == '__main__':
     else:
         outdir = options.outdir
     
-    def recursive_yaml_load(stream,read_yaml_files):
-        inp = yaml.load(stream)
-        out = {}
-        if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
-            return inp
-
-        for path in inp['ExternalConfigs']:
-            if not os.path.exists(path):
-                print "WARNING: path '%s' doesn't exist ignoring." % (path)
-                continue
-            for f in os.listdir(path):
-                if f.endswith('.yaml'):
-                    filename = '%s/%s' % (path, f)
-
-                    # Prevent infinite recusion loops
-                    if filename in read_yaml_files:
-                        print "WARNING: File '%s' already read, ignoring the file." % (filename)
-                        continue
-                    read_yaml_files.append(filename)
-
-                    fp = file(filename, 'r')
-                    ext = recursive_yaml_load(fp, read_yaml_files)
-                    for k,v in ext.iteritems():
-                        if inp.has_key(k) and isinstance(v, list) and not isinstance(inp[k], list):
-                            print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
-                            break  
-                        elif inp.has_key(k) and not isinstance(v, list) and isinstance(inp[k], list):
-                            print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
-                            break  
-                        elif inp.has_key(k) and not isinstance(v, list):
-                            print "Collision of values: %s in %s/%s" % (k, path, f)
-                            break
-                        elif inp.has_key(k) and isinstance(v, list):
-                            # External configs come first
-                            v.extend(inp[k])
-                            out[k] = v
-                        else:
-                            out[k] = v
-                    for k,v in inp.iteritems():
-                        # we already merged if it's already there
-                        if not out.has_key(k):
-                            out[k] = v
-                    inp = out
-                    out = {}
-                            
-        return inp
-
     ks = KSWriter(outdir)
 
     if not os.path.isfile(options.configsfile):
