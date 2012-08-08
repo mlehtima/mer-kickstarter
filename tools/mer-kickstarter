@@ -38,7 +38,6 @@ def mkdir_p(path):
 class KSWriter():
     def __init__(self, out):
         self.outdir = out
-        self.extra = {}
         pass
       
     def merge(*input):
@@ -194,9 +193,15 @@ class KSWriter():
         f.write(a)
         f.close()
 
-def recursive_yaml_load(stream,read_yaml_files):
+def recursive_yaml_load(stream,read_yaml_files, externalconfigs = None):
     inp = yaml.load(stream)
     out = {}
+    if externalconfigs:
+        if inp.has_key('ExternalConfigs'):
+            inp['ExternalConfigs'].append(externalconfigs)
+        else:
+            inp['ExternalConfigs'] = [externalconfigs]
+    
     if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
         return inp
 
@@ -248,26 +253,20 @@ if __name__ == '__main__':
                     help="configuration meta file")
     parser.add_option("-o", "--outdir", type="string", dest="outdir",
                     help="outdir", default=".")
+    parser.add_option("-e", "--external-configs-path", type="string", dest="externalconfigs",
+                    help="directory containing external configs", default=None)
     (options, args) = parser.parse_args()
 
     if options.configsfile is None:
         print "you need to provide meta file with --configs"
         sys.exit(1)
-
-    outdir = ""
-    if options.outdir is None:
-        outdir = "."
-    else:
-        outdir = options.outdir
     
-    ks = KSWriter(outdir)
-
     if not os.path.isfile(options.configsfile):
         print "ERROR: Given configuration file is not file '%s'." % (options.configsfile)
         sys.exit(1)
 
     read_yaml_files = [ options.configsfile ]
-    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files)
+    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files, options.externalconfigs)
 
     repositories = None
     global_repo_url_vars = None
@@ -278,6 +277,7 @@ if __name__ == '__main__':
         global_repo_url_vars = image_meta['RepositoryURLVariables']
 
     if image_meta.has_key('Configurations') and image_meta['Configurations']:
+        ks = KSWriter(options.outdir)
         for configuration in image_meta['Configurations']:
             conf = ks.parse(image_meta, configuration)
             if conf.has_key('Active') and conf['Active']:
