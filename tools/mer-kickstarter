@@ -140,8 +140,8 @@ class KSWriter():
         new_repos = []
 
         if not meta.has_key('FileName') or not meta['FileName']:
-            print "WARNING: FileName field missing. Ignoring config called '%s'." % meta['Name']
-            return
+            meta['FileName'] = meta['Name'].replace(" ", "_")
+            print "WARNING: FileName field missing. Writing as '%s'." % meta['FileName']
         
         # Substitue repository values that are found.
         for repo in repos:
