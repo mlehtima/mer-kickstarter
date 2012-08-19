@@ -116,7 +116,7 @@ class KSWriter():
             if part_output != '':
                conf['Part'] = part_output
             else:
-                print "WARNING: %s not found" % partfn
+                print "WARNING: The Part: key takes a filename as an argument and %s was not found" % conf['Part']
                 del conf['Part']
 
         if postscript:
