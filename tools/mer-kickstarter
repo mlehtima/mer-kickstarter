@@ -126,14 +126,12 @@ class KSWriter():
         return conf
 
     def __handle_repo_url_vars(self, r, var_dict):
-        for pair in var_dict:
-            if not pair:
-                continue
-            elif isinstance(pair,dict):
-                (key,value) = pair.popitem()
-                r['Url'] = r['Url'].replace("%s" % (key), value)
-            else:
-                print "WARNING: Ignoring '%s' repository URL variable." % (pair)
+        try:
+            for key in var_dict:
+                r['Url'] = r['Url'].replace("%s" % key, var_dict[key])
+        except:
+            print "WARNING: Ignoring badly specified RepositoryUrlVariables. It should be a set (not list) of Key: Value"
+
         return r
         
     def process_files(self, meta, repos, global_repo_url_vars):
