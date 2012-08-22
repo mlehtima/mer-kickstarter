@@ -78,20 +78,27 @@ class KSWriter():
             print 'WARNING: %s not found, skipping.' % config_file
         return output
     
-    def __recursive_inherit(self, conf, image_meta, already_inherited):
-        if conf.has_key("Inherit") and conf["Inherit"]:
-            inherit_list = conf["Inherit"]
-            conf["Inherit"] = []
-            for x in inherit_list:
-                if x in already_inherited:
-                    continue
-                already_inherited.append(x)
-                if not image_meta.has_key(x):
-                    print "WARNING: Unable to find inherit section '%s' ignoring." % x
-                    continue
-                print "Merging %s" % (x)
-                conf = self.__merge_dictionaries(conf, image_meta[x])
-            conf = self.__recursive_inherit(conf, image_meta, already_inherited)
+    def __recursive_inherit(self, conf, image_meta, element_to_check, already_inherited):
+
+        # If there is no inherit elements return the current structure.
+        if not element_to_check.has_key("Inherit") or not element_to_check["Inherit"]:
+            return conf
+
+        for x in element_to_check["Inherit"]:
+            if x in already_inherited:
+                continue
+            already_inherited.append(x)
+            if not image_meta.has_key(x):
+                print "WARNING: Unable to find inherit section '%s' ignoring." % x
+                continue
+                
+            # First check sub elements
+            conf = self.__recursive_inherit(conf, image_meta, image_meta[x], already_inherited)
+            
+            print "Merging: %s" % (x)    
+            # ... end of the tree so merge the dictionary
+            conf = self.__merge_dictionaries(conf, image_meta[x])
+
         return conf
 
     def parse(self, image_meta, configuration):
@@ -99,7 +106,10 @@ class KSWriter():
         
         already_inherited = []
         if configuration.has_key('Inherit') and configuration["Inherit"]:
-            conf = self.__recursive_inherit(configuration, image_meta, already_inherited)
+            conf = self.__recursive_inherit(conf, image_meta, configuration, already_inherited)
+            # After the inherited elements have been merged merge the main config that overrides
+            # everything else.
+            conf = self.__merge_dictionaries(conf, configuration)
         
         postscript = ""
         if conf.has_key('PostScripts'):
