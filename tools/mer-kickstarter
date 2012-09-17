@@ -95,7 +95,6 @@ class KSWriter():
             # First check sub elements
             conf = self.__recursive_inherit(conf, image_meta, image_meta[x], already_inherited)
             
-            print "Merging: %s" % (x)    
             # ... end of the tree so merge the dictionary
             conf = self.__merge_dictionaries(conf, image_meta[x])
 
