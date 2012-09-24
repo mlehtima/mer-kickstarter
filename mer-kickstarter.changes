@@ -1,3 +1,11 @@
+* Mon Sep 24 2012 David Greaves <david@dgreaves.com> - 0.17-1
+- Upstream at 0.17:
+ - Fixes MER#549: Don't override data from local section with data inherited se
+ - Handle --repo-url-variables command line
+ - Use the RepositoryURLVariables key as a plain map and inform users when it is invalid
+ - Clarify the use of Part: key if the value isn't found as a file
+ - If FileName is missing for a Configuration, use Name
+
 * Wed Aug 08 2012 David Greaves <david@dgreaves.com> - 0.16-1
  - Update to 0.16
 
