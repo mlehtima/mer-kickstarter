@@ -53,6 +53,12 @@ class KSWriter():
                     out[k] = temp
                 elif isinstance(out[k], list) or isinstance(v, list):
                     sys.exit("Error: Type mismatch. Can not combine list with non-list for field '%s'" % k)
+                elif isinstance(out[k], dict) and isinstance(v, dict):
+                    temp = copy.copy(v)
+                    temp.update(out[k])
+                    out[k] = temp
+                elif isinstance(out[k], dict) or isinstance(v, dict):
+                    sys.exit("Error: Type mismatch. Can not combine dict with non-dict for field '%s'" % k)
                 else:
                     out[k] = v
             else:
