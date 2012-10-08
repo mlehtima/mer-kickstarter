@@ -10,7 +10,7 @@ Name:       mer-kickstarter
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Summary:    Create kickstart files for Mer images
-Version:    0.17
+Version:    0.18
 Release:    1
 Group:      System/Base
 License:    GPLv2

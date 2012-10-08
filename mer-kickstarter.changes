@@ -1,3 +1,7 @@
+* Mon Oct 08 2012 David Greaves <david@dgreaves.com> - 0.18-1
+- Upstream at 0.18
+- Fix problem where dicts are not merged properly (Fixes MER#583)
+
 * Mon Sep 24 2012 David Greaves <david@dgreaves.com> - 0.17-1
 - Upstream at 0.17:
  - Fixes MER#549: Don't override data from local section with data inherited se
