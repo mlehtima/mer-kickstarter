@@ -18,7 +18,9 @@ ${metadata.Part}
 #else
 part / --size ${metadata.PartSize} --ondisk sda --fstype=${metadata.FileSystem}
 #end if
-rootpw ${metadata.RootPass} 
+#if $metadata.has_key("RootPass") and $metadata.RootPass
+rootpw ${metadata.RootPass}
+#end if
 #if $metadata.has_key("StartX")
 xconfig --startxonboot
 #end if
