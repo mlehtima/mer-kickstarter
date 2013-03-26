@@ -10,9 +10,15 @@
 # kickstarter.py
 # ###############################################
 
+#if $metadata.has_key("Language") and $metadata.Language
 lang ${metadata.Language}
+#end if
+#if $metadata.has_key("Keyboard") and $metadata.Keyboard
 keyboard ${metadata.Keyboard}
+#end if
+#if $metadata.has_key("Timezone") and $metadata.Timezone
 timezone --utc ${metadata.Timezone}
+#end if
 #if $metadata.has_key("Part")
 ${metadata.Part}
 #else
