@@ -160,7 +160,17 @@ class KSWriter():
         for repo in repos:
             r = {}
             r['Name'] = repo['Name']
-            r['Url'] = repo['Url']
+
+            # If there is image type specifier and there is url for that lets use it
+            if meta.has_key('ImageType') and repo.has_key('Url-'+meta['ImageType']):
+              r['Url'] = repo['Url-'+meta['ImageType']]
+            # Else if there is URL key present
+            elif repo.has_key('Url'):
+              r['Url'] = repo['Url']
+            # .. if no default url defined then skip the repo.
+            else:
+              continue
+
             if repo.has_key('Options'):
                 r['Options'] = repo['Options']
 
