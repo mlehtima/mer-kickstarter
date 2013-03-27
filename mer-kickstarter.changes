@@ -1,3 +1,8 @@
+* Wed Mar 2013 David Greaves <david@dgreaves.com> - 0.19-1
+- Make Language, Keyboard and Timezone optional as well.
+- Don't require RootPass to be set.
+- New variable ImageType which if set currently can take special version of Url field in repos.
+
 * Mon Oct 08 2012 David Greaves <david@dgreaves.com> - 0.18-1
 - Upstream at 0.18
 - Fix problem where dicts are not merged properly (Fixes MER#583)
