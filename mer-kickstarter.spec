@@ -11,12 +11,12 @@ Name:       mer-kickstarter
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Summary:    Create kickstart files for Mer images
 Version:    0.19
-Release:    1
+Release:    2
 Group:      System/Base
 License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.merproject.org
-Source0:    kickstarter-%{version}.tar.bz2
+Source0:    kickstarter.tar.bz2
 Source100:  mer-kickstarter.yaml
 Requires:   python-yaml
 Requires:   python-urlgrabber

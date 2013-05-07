@@ -1,12 +1,12 @@
 Name: mer-kickstarter
 Summary: Create kickstart files for Mer images
 Version: 0.19
-Release: 1
+Release: 2
 Group: System/Base
 License: GPLv2
 URL: http://www.merproject.org
 Sources:
-  - kickstarter-%{version}.tar.bz2
+  - kickstarter.tar.bz2
 Description: Create Configuration files to build Mer images
 Requires:
   - python-yaml
