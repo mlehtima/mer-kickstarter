@@ -116,6 +116,11 @@ class KSWriter():
             # everything else.
             conf = self.__merge_dictionaries(conf, configuration)
         
+        prescript = ""
+        if conf.has_key('PreScripts'):
+            for scr in conf['PreScripts']:
+                prescript += self.__read_config_file(image_meta,scr)
+
         postscript = ""
         if conf.has_key('PostScripts'):
             for scr in conf['PostScripts']:
@@ -134,6 +139,8 @@ class KSWriter():
                 print "WARNING: The Part: key takes a filename as an argument and %s was not found" % conf['Part']
                 del conf['Part']
 
+        if prescript:
+            conf['Pre'] = prescript
         if postscript:
             conf['Post'] = postscript
         if nochrootscript:
