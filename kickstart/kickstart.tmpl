@@ -1,8 +1,8 @@
-#if $metadata.has_key("Mic2Options")   and $metadata.has_key("Architecture")
+#if "Mic2Options"in $metadata and "Architecture" in $metadata
 # -*-mic2-options-*- ${metadata.Mic2Options} --arch=${metadata.Architecture} -*-mic2-options-*-
-#else if $metadata.has_key("Mic2Options")
+#else if "Mic2Options" in $metadata
 # -*-mic2-options-*- ${metadata.Mic2Options} -*-mic2-options-*-
-#else if $metadata.has_key("Architecture")
+#else if "Architecture" in $metadata
 # -*-mic2-options-*- --arch=${metadata.Architecture} -*-mic2-options-*-
 #end if
 # ##############################################
@@ -10,58 +10,58 @@
 # kickstarter.py
 # ###############################################
 
-#if $metadata.has_key("Language") and $metadata.Language
+#if "Language" in $metadata and $metadata.Language
 lang ${metadata.Language}
 #end if
-#if $metadata.has_key("Keyboard") and $metadata.Keyboard
+#if "Keyboard" in $metadata and $metadata.Keyboard
 keyboard ${metadata.Keyboard}
 #end if
-#if $metadata.has_key("Timezone") and $metadata.Timezone
+#if "Timezone" in $metadata and $metadata.Timezone
 timezone --utc ${metadata.Timezone}
 #end if
-#if $metadata.has_key("Part")
+#if "Part" in $metadata
 ${metadata.Part}
 #else
 part / --size ${metadata.PartSize} --ondisk sda --fstype=${metadata.FileSystem}
 #end if
-#if $metadata.has_key("RootPass") and $metadata.RootPass
+#if "RootPass" in $metadata and $metadata.RootPass
 rootpw ${metadata.RootPass}
 #end if
-#if $metadata.has_key("StartX")
+#if "StartX" in $metadata
 xconfig --startxonboot
 #end if
-#if $metadata.has_key("BootloaderTimeout")  or $metadata.has_key("BootloaderAppend") or $metadata.has_key("BootloaderOptions")
+#if "BootloaderTimeout" in $metadata or "BootloaderAppend" in $metadata or "BootloaderOptions" in $metadata
 bootloader #slurp
 #end if
-#if $metadata.has_key("BootloaderTimeout") 
+#if "BootloaderTimeout" in $metadata
  --timeout=${metadata.BootloaderTimeout} #slurp
 #end if
-#if $metadata.has_key("BootloaderAppend") 
+#if "BootloaderAppend" in $metadata
  --append="${metadata.BootloaderAppend}" #slurp
 #end if
-#if $metadata.has_key("BootloaderOptions") 
+#if "BootloaderOptions" in $metadata
   ${metadata.BootloaderOptions}
 #end if
-#if $metadata.has_key("Desktop")
+#if "Desktop" in $metadata
 
 desktop #slurp
-#if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
+#if "DefaultUser" in $metadata and $metadata.DefaultUser
 --autologinuser=${metadata.DefaultUser}  #slurp
 #end if
 #if $metadata.Desktop != "None"
 --defaultdesktop=${metadata.Desktop} #slurp
 #end if
-#if $metadata.has_key("Session")
+#if "Session" in $metadata
 --session="${metadata.Session}"
 #end if
 #end if
-#if $metadata.has_key("DefaultUser") and $metadata.DefaultUser
+#if "DefaultUser" in $metadata and $metadata.DefaultUser
 
 user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.DefaultUserPass} 
 #end if
 
 #set $options_global = ""
-#if $metadata.has_key("RepositoryOptions")
+#if "RepositoryOptions" in $metadata
 #set $options_global = $metadata.RepositoryOptions
 #end if
 ## Go though repositories mentioned for this config
@@ -73,7 +73,7 @@ user --name ${metadata.DefaultUser}  --groups audio,video --password ${metadata.
 #for $rr in $repos
 #if $rr.Name == $r
 #set $repo_url = $rr.Url
-#if $rr.has_key("Options") and $rr.Options
+#if "Options" in $rr and $rr.Options
 #set $repo_options += " "+$rr.Options
 #end if
 #end if
@@ -84,45 +84,45 @@ repo --name=${r} --baseurl=${repo_url} ${repo_options}
 #end if
 #end for
 
-#if $metadata.has_key("Pre")
+#if "Pre" in $metadata
 %pre
 ${metadata.Pre}
 %end
 #end if
 
-#if $metadata.has_key("PackageArgs")
+#if "PackageArgs" in $metadata
 %packages --${metadata.PackageArgs}
 #else
 %packages
 #end if
-#if $metadata.has_key("Groups")
+#if "Groups" in $metadata
 #for $g in $metadata.Groups
 @${g}
 #end for
 
 #end if
-#if $metadata.has_key("Kernel")
+#if "Kernel" in $metadata
 $metadata.Kernel
 
 #end if
-#if $metadata.has_key("ExtraPackages")
+#if "ExtraPackages" in $metadata
 #for $e in $metadata.ExtraPackages
 ${e}
 #end for
 #end if
-#if $metadata.has_key("RemovePackages")
+#if "RemovePackages" in $metadata
 #for $e in $metadata.RemovePackages
 -${e}
 #end for
 #end if
 %end
 
-#if $metadata.has_key("Post")
+#if "Post" in $metadata
 %post
 ${metadata.Post}
 %end
 #end if
-#if $metadata.has_key("NoChroot")
+#if "NoChroot" in $metadata
 
 %post --nochroot
 ${metadata.NoChroot}

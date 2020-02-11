@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # mer-kickstarter tool to convert .yaml files to .ks files
 # Copyright (C) 2011 Anas Nashif <anas.nashif@intel.com>
@@ -45,8 +45,8 @@ class KSWriter():
 
     def __merge_dictionaries(self, first, second):
         out = copy.copy(first)
-        for k,v in second.iteritems():
-            if out.has_key(k):
+        for k,v in second.items():
+            if k in out:
                 if isinstance(out[k], list) and isinstance(v, list):
                     temp = copy.copy(v)
                     temp.extend(out[k])
@@ -70,7 +70,7 @@ class KSWriter():
         path = None
         if os.path.exists(config_file):
             path = config_file
-        elif image_meta.has_key('ExternalConfigs'):
+        elif 'ExternalConfigs' in image_meta:
             for extconfdir in image_meta['ExternalConfigs']:
                 if os.path.exists('%s/%s' % (extconfdir,config_file)):
                     path = '%s/%s' % (extconfdir,config_file)
@@ -81,21 +81,21 @@ class KSWriter():
             output += "\n"
             f.close()
         else:
-            print 'WARNING: %s not found, skipping.' % config_file
+            print ('WARNING: %s not found, skipping.' % config_file)
         return output
     
     def __recursive_inherit(self, conf, image_meta, element_to_check, already_inherited):
 
         # If there is no inherit elements return the current structure.
-        if not element_to_check.has_key("Inherit") or not element_to_check["Inherit"]:
+        if "Inherit" not in element_to_check or "Inherit" not in element_to_check:
             return conf
 
         for x in element_to_check["Inherit"]:
             if x in already_inherited:
                 continue
             already_inherited.append(x)
-            if not image_meta.has_key(x):
-                print "WARNING: Unable to find inherit section '%s' ignoring." % x
+            if x not in image_meta:
+                print ("WARNING: Unable to find inherit section '%s' ignoring." % x)
                 continue
                 
             # First check sub elements
@@ -110,33 +110,33 @@ class KSWriter():
         conf = {}
         
         already_inherited = []
-        if configuration.has_key('Inherit') and configuration["Inherit"]:
+        if 'Inherit' in configuration and configuration["Inherit"]:
             conf = self.__recursive_inherit(conf, image_meta, configuration, already_inherited)
             # After the inherited elements have been merged merge the main config that overrides
             # everything else.
             conf = self.__merge_dictionaries(conf, configuration)
         
         prescript = ""
-        if conf.has_key('PreScripts'):
+        if 'PreScripts' in conf:
             for scr in conf['PreScripts']:
                 prescript += self.__read_config_file(image_meta,scr)
 
         postscript = ""
-        if conf.has_key('PostScripts'):
+        if 'PostScripts' in conf:
             for scr in conf['PostScripts']:
                 postscript += self.__read_config_file(image_meta,scr)
 
         nochrootscript = ""
-        if conf.has_key('NoChrootScripts'): 
+        if 'NoChrootScripts' in conf:
             for scr in conf['NoChrootScripts']:
                 nochrootscript += self.__read_config_file(image_meta,scr)
 
-        if conf.has_key("Part"):
+        if "Part" in conf:
             part_output = self.__read_config_file(image_meta,conf['Part'])
             if part_output != '':
                conf['Part'] = part_output
             else:
-                print "WARNING: The Part: key takes a filename as an argument and %s was not found" % conf['Part']
+                print ("WARNING: The Part: key takes a filename as an argument and %s was not found" % conf['Part'])
                 del conf['Part']
 
         if prescript:
@@ -152,16 +152,16 @@ class KSWriter():
             for key in var_dict:
                 r['Url'] = r['Url'].replace("%s" % key, var_dict[key])
         except:
-            print "WARNING: Ignoring badly specified RepositoryUrlVariables. It should be a set (not list) of Key: Value"
+            print ("WARNING: Ignoring badly specified RepositoryUrlVariables. It should be a set (not list) of Key: Value")
 
         return r
         
     def process_files(self, meta, repos, global_repo_url_vars):
         new_repos = []
 
-        if not meta.has_key('FileName') or not meta['FileName']:
+        if 'FileName' not in meta or not meta['FileName']:
             meta['FileName'] = meta['Name'].replace(" ", "_")
-            print "WARNING: FileName field missing. Writing as '%s'." % meta['FileName']
+            print ("WARNING: FileName field missing. Writing as '%s'." % meta['FileName'])
         
         # Substitue repository values that are found.
         for repo in repos:
@@ -169,26 +169,26 @@ class KSWriter():
             r['Name'] = repo['Name']
 
             # If there is image type specifier and there is url for that lets use it
-            if meta.has_key('ImageType') and repo.has_key('Url-'+meta['ImageType']):
+            if 'ImageType' in meta and 'Url-'+meta['ImageType'] in repo:
               r['Url'] = repo['Url-'+meta['ImageType']]
             # Else if there is URL key present
-            elif repo.has_key('Url'):
+            elif 'Url' in repo:
               r['Url'] = repo['Url']
             # .. if no default url defined then skip the repo.
             else:
               continue
 
-            if repo.has_key('Options'):
+            if 'Options' in repo:
                 r['Options'] = repo['Options']
 
-            if meta.has_key("Architecture") and meta['Architecture']:
+            if "Architecture" in meta and meta['Architecture']:
                 # Prefer RepositoryArchitecture if present, otherwise use Architecture
                 repo_arch = meta['Architecture']
-                if meta.has_key('RepositoryArchitecture') and meta['RepositoryArchitecture']:
+                if 'RepositoryArchitecture' in meta and meta['RepositoryArchitecture']:
                     repo_arch = meta['RepositoryArchitecture']
                 r['Url'] = r['Url'].replace("@ARCH@", repo_arch)
             
-            if meta.has_key("RepositoryURLVariables") and meta['RepositoryURLVariables']:
+            if "RepositoryURLVariables" in meta and meta['RepositoryURLVariables']:
                 self.__handle_repo_url_vars(r,meta['RepositoryURLVariables'])
             
             if global_repo_url_vars:
@@ -197,7 +197,7 @@ class KSWriter():
             new_repos.append(r)
 
         # Check that all repos are actually found from repos data set
-        if meta.has_key("Repos"):
+        if "Repos" in meta:
             # Convert list to set to remove duplicated entries.
             # NOTE: This mixes the order that repos were introduced, but that 
             # shouldn't matter as all the handling is already over.
@@ -209,7 +209,7 @@ class KSWriter():
                         found = True
                         break
                 if not found:
-                    print "WARNING: Repository with name '%s' is not found, ignoring the repo for file '%s.ks'." % (selected_repo, meta['FileName'])
+                    print ("WARNING: Repository with name '%s' is not found, ignoring the repo for file '%s.ks'." % (selected_repo, meta['FileName']))
 
         nameSpace = {'metadata': meta,  'repos': new_repos}
         t = kickstart(searchList=[nameSpace])
@@ -222,25 +222,25 @@ class KSWriter():
         
         ksFile = "%s/%s.ks" % ( self.outdir, meta['FileName'] )
         f = open(ksFile, 'w')
-        print "Creating %s (%s)" %(conf['Name'], ksFile )
+        print ("Creating %s (%s)" %(conf['Name'], ksFile ))
         f.write(a)
         f.close()
 
 def recursive_yaml_load(stream,read_yaml_files, ext_conf_path = None):
-    inp = yaml.load(stream)
+    inp = yaml.load(stream, Loader = yaml.SafeLoader)
     out = {}
     if ext_conf_path:
-        if inp.has_key('ExternalConfigs') and inp['ExternalConfigs']:
+        if 'ExternalConfigs' in inp and inp['ExternalConfigs']:
             inp['ExternalConfigs'].append(ext_conf_path)
         else:
             inp['ExternalConfigs'] = [ext_conf_path]
     
-    if not inp.has_key('ExternalConfigs') or not inp['ExternalConfigs']:
+    if 'ExternalConfigs' not in inp or not inp['ExternalConfigs']:
         return inp
 
     for path in inp['ExternalConfigs']:
         if not os.path.exists(path):
-            print "WARNING: path '%s' doesn't exist ignoring." % (path)
+            print ("WARNING: path '%s' doesn't exist ignoring." % (path))
             continue
         for f in os.listdir(path):
             if f.endswith('.yaml'):
@@ -248,31 +248,31 @@ def recursive_yaml_load(stream,read_yaml_files, ext_conf_path = None):
 
                 # Prevent infinite recusion loops
                 if filename in read_yaml_files:
-                    print "WARNING: File '%s' already read, ignoring the file." % (filename)
+                    print ("WARNING: File '%s' already read, ignoring the file." % (filename))
                     continue
                 read_yaml_files.append(filename)
 
-                fp = file(filename, 'r')
+                fp = open(filename, 'r')
                 ext = recursive_yaml_load(fp, read_yaml_files)
-                for k,v in ext.iteritems():
-                    if inp.has_key(k) and isinstance(v, list) and not isinstance(inp[k], list):
-                        print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                for k,v in ext.items():
+                    if k in inp and isinstance(v, list) and not isinstance(inp[k], list):
+                        print ("Different type (list vs not list) of values: %s in %s/%s" % (k, path, f))
                         break  
-                    elif inp.has_key(k) and not isinstance(v, list) and isinstance(inp[k], list):
-                        print "Different type (list vs not list) of values: %s in %s/%s" % (k, path, f)
+                    elif k in inp and not isinstance(v, list) and isinstance(inp[k], list):
+                        print ("Different type (list vs not list) of values: %s in %s/%s" % (k, path, f))
                         break  
-                    elif inp.has_key(k) and not isinstance(v, list):
-                        print "Collision of values: %s in %s/%s" % (k, path, f)
+                    elif k in inp and not isinstance(v, list):
+                        print ("Collision of values: %s in %s/%s" % (k, path, f))
                         break
-                    elif inp.has_key(k) and isinstance(v, list):
+                    elif k in inp and isinstance(v, list):
                         # External configs come first
                         v.extend(inp[k])
                         out[k] = v
                     else:
                         out[k] = v
-                for k,v in inp.iteritems():
+                for k,v in inp.items():
                     # we already merged if it's already there
-                    if not out.has_key(k):
+                    if k not in out:
                         out[k] = v
                 inp = out
                 out = {}
@@ -293,22 +293,22 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.configsfile is None:
-        print "you need to provide meta file with --configs"
+        print ("you need to provide meta file with --configs")
         sys.exit(1)
     
     if not os.path.isfile(options.configsfile):
-        print "ERROR: Given configuration file is not file '%s'." % (options.configsfile)
+        print ("ERROR: Given configuration file is not file '%s'." % (options.configsfile))
         sys.exit(1)
 
     read_yaml_files = [ options.configsfile ]
-    image_meta = recursive_yaml_load(file(options.configsfile, 'r'),read_yaml_files, options.ext_conf_path)
+    image_meta = recursive_yaml_load(open(options.configsfile, 'r'),read_yaml_files, options.ext_conf_path)
 
     repositories = None
     global_repo_url_vars = {}
-    if image_meta.has_key('Repositories') and image_meta['Repositories']:
+    if 'Repositories' in image_meta and image_meta['Repositories']:
         repositories = image_meta['Repositories']
 
-    if image_meta.has_key('RepositoryURLVariables') and image_meta['RepositoryURLVariables']:
+    if 'RepositoryURLVariables' in image_meta and image_meta['RepositoryURLVariables']:
         global_repo_url_vars = image_meta['RepositoryURLVariables']
     
     if options.repo_url_variables:
@@ -321,23 +321,23 @@ if __name__ == '__main__':
                     (key,value) = var.split(":")
                     global_repo_url_vars[key] = value
                 except:
-                    print "ERROR: invalid repo URL variable '%s' given on cmdline." % (var)
+                    print ("ERROR: invalid repo URL variable '%s' given on cmdline." % (var))
                     sys.exit(1)
         except ValueError:
-            print "ERROR: Invalid value given for repository URL variables '%s'" % (options.repo_url_variables)
+            print ("ERROR: Invalid value given for repository URL variables '%s'" % (options.repo_url_variables))
             sys.exit(1)
     
-    if image_meta.has_key('Configurations') and image_meta['Configurations']:
+    if 'Configurations' in image_meta and image_meta['Configurations']:
         ks = KSWriter(options.outdir)
         for configuration in image_meta['Configurations']:
             conf = ks.parse(image_meta, configuration)
-            if conf.has_key('Active') and conf['Active']:
+            if 'Active' in conf and conf['Active']:
                 ks.process_files(conf, repositories, global_repo_url_vars)
             else:
                 filename = None
-                if configuration.has_key('Filename') and configuration['Filename']:
+                if 'Filename' in configuration and configuration['Filename']:
                    filename = configuration['Filename']
-                print "%s is inactive, not generating file '%s' this time." %(configuration['Name'], filename)
+                print ("%s is inactive, not generating file '%s' this time." %(configuration['Name'], filename))
     else:
-        print "WARNING: No 'Configurations' found from yaml."
+        print ("WARNING: No 'Configurations' found from yaml.")
 

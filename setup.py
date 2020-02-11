@@ -10,17 +10,17 @@ except ImportError:
 
 version_file = 'VERSION'
 if not os.path.isfile(version_file):
-    print 'No %s file in topdir, abort' % (version_file)
+    print ('No %s file in topdir, abort' % (version_file))
     sys.exit(1)
 
 try:
     # first line should be the version number
     version = open(version_file).readline().strip()
     if not version:
-        print '%s file is invalid, abort' % (version_file)
+        print ('%s file is invalid, abort' % (version_file))
         sys.exit(1)
 except IOError:
-    print 'WARNING: Cannot write version number file'
+    print ('WARNING: Cannot write version number file')
 
 
 

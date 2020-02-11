@@ -1,6 +1,7 @@
-Name:       mer-kickstarter
+# fixme: should be defined in base system side
+%define python3_sitearch %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
 
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+Name:       mer-kickstarter
 Summary:    Create kickstart files for Mer images
 Version:    0
 Release:    1
@@ -9,12 +10,12 @@ License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.merproject.org
 Source0:    %{name}-%{version}.tar.gz
-Requires:   python-yaml
-Requires:   python-urlgrabber
-Requires:   python-cheetah
-Requires:   python-lxml
-BuildRequires:  pkgconfig(python-2.7)
-BuildRequires:  python-cheetah
+Requires:   python3-yaml
+Requires:   python3-urlgrabber
+Requires:   python3-cheetah
+Requires:   python3-lxml
+BuildRequires:  python3-base
+BuildRequires:  python3-cheetah
 
 %description
 Create Configuration files to build Mer images
@@ -25,13 +26,13 @@ Create Configuration files to build Mer images
 %build
 make tmpls
 
-CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
+CFLAGS="$RPM_OPT_FLAGS" %{__python3} setup.py build
 
 %install
 rm -rf %{buildroot}
-%{__python} setup.py install --root=%{buildroot} -O1
+%{__python3} setup.py install --root=%{buildroot} -O1
 
 %files
 %defattr(-,root,root,-)
 %{_bindir}/*
-%{python_sitelib}/*
+%{python3_sitearch}/*
